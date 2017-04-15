@@ -1,4 +1,5 @@
 robot: main.cpp
 	g++ -o robot main.cpp
-clean: 
+
+clean:
 	rm robot

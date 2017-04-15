@@ -3,6 +3,7 @@
 #include <list> //used for list
 #include <queue> //used for queue
 #include <stdlib.h> //used for abs
+
 using namespace std;
 
 struct Point{
@@ -11,7 +12,8 @@ struct Point{
     char direction;
     string path;
 };
-void get_input(Point& original, Point& target);
+void get_input(Point& original, Point& target, bool isPart1, int& maximum_distance,
+    string& actions);
 void add_new_point(Point original, Point target,queue<Point>& list_point, list<string>& action_path,
                     int maximum_distance);
 bool check_destination(Point target, Point point);
@@ -19,80 +21,153 @@ void check_destination_and_update_list(queue<Point>& list_point, list<string>& a
         Point forward, Point left, Point right, Point target, int maximum_distance);
 void find_path_to_destination(Point original, Point target,int numStep, list<string>& action_path);
 void optimal_add_element(queue<Point>& list_point, Point point,Point target, int maximum_distance);
+void part1(Point original, Point target, string actions);
+void moveForward(Point& point);
+void turnLeft(Point& point);
+void turnRight(Point& point);
+
 
 int main(int argc, char const *argv[]) {
     Point original, target;
-    int numStep =4;
+    int numStep ;
     list<string> action_path;
-
-    get_input(original, target);
-    find_path_to_destination(original, target,numStep, action_path);
-
-
-    if (action_path.empty()) {
-        std::cout << "empty" << '\n';
-    }
-    else{
-        while (!action_path.empty()) {
-            std::cout << action_path.front().erase(0, 1)<< '\n';
-            action_path.pop_front();
+    string actions, user_decision;
+    do {
+        cout<<"Please enter 1 to run part1, enter 2 to run part 2 or enter e to exit: ";
+        cin>>user_decision;
+        if (user_decision == "1") {
+            get_input(original, target, true, numStep,actions);
+            part1(original, target, actions);
         }
-    }
-    // while (!list_point.empty())
-    // {
-    //     std::cout << "x: " << list_point.front().x <<"  y: "<<list_point.front().y
-    //         <<"  direction: "<<list_point.front().direction<< endl;;
-    //     list_point.pop();
-    // }
+        else if(user_decision == "2"){
+            get_input(original, target, true, numStep,actions);
+            find_path_to_destination(original, target,numStep, action_path);
+        }
+    } while(user_decision != "e");
+
     return 0;
 }
+/*---------------------------------------------------------------------
+ * Method: get_input(void)
+ * Scope:  Global
+ * This function will get the input from users. If part 1 call this, it
+ * will require users to enter Location, Direction faced, Actions
+ *
+ *---------------------------------------------------------------------*/
+void get_input(Point& original, Point& target, bool isPart1, int& maximum_distance,
+    string& actions){
+    int x_original, y_original, x_target, y_target;
+    string direction;
+    //Users enter the location and Direction faced
+    do {
+        string original_string;
+        cout <<"Please enter original position (e.g [2,3]): ";
+        cin >>original_string;
+        x_original = original_string.at(1)-'0';
+        y_original = original_string.at(3)-'0';
+        if (x_original >8 || x_original<=0 || y_original <=0 || y_original >=9) {
+            cout<<"Please enter again. e.g [3,4]\n";
+        }
+    } while(x_original >8 || x_original<=0 || y_original <=0 || y_original >=9);
 
-void get_input(Point& original, Point& target){
-    // int x_original, y_original, x_target, y_target;
-    // char original_position, target_position;
-    // cout <<"Please enter original position: ";
-    // cin >> original.x >> original.y;
-    // cout << "Original Direction faced: ";
-    // cin >> original.direction;
-    original.x = 2;
-    original.y = 3;
-    original.direction = 'N';
-    target.x = 3;
-    target.y = 4;
-    target.direction = 'S';
-    // cout <<"Please enter original position: ";
-    // cin >> target.x >> target.y;
-    // cout << "Target position: ";
-    // cin >> target.direction;
+    do {
+        cout << "Original Direction faced (e.g N): ";
+        cin >> direction;
+        if (direction !="N" && direction !="S" &&direction !="W" &&direction !="E") {
+            cout<<"Please enter again. Only enter N,S,W or E\n";
+        }
+    } while(direction !="N" && direction !="S" &&direction !="W" &&direction !="E");
+
+    original.x = x_original;
+    original.y = y_original;
+    original.direction = direction.at(0);
+    //this is for part 1
+    if (isPart1) {
+        do {
+            cout <<"Enter Actions:";
+            cin >> actions;
+            actions.append(",");
+            if (actions.length()%2 !=0) {
+                cout<<"Please enter again. e.g M,M,M,L,M,R,R,\n";
+            }
+        } while(actions.length()%2 !=0);
+
+    }
+    else{
+        //this is for the second part
+        do {
+            string original_string;
+            cout <<"Please enter Target position (e.g [2,3]): ";
+            cin >>original_string;
+            x_target = original_string.at(1)-'0';
+            y_target = original_string.at(3)-'0';
+            if (x_target >8 || x_target<=0 || y_target <=0 || y_target >=9) {
+                cout<<"Please enter again. e.g [3,4]\n";
+            }
+        } while(x_target >8 || x_target<=0 || y_target <=0 || y_target >=9);
+        do {
+            cout << "Target position faced (e.g N): ";
+            cin >> direction;
+            if (direction !="N" && direction !="S" &&direction !="W" &&direction !="E") {
+                cout<<"Please enter again. Only enter N,S,W or E\n";
+            }
+        } while(direction !="N" && direction !="S" &&direction !="W" &&direction !="E");
+        do {
+            cout<<"Maximum actions allowed: ";
+            cin>> maximum_distance;
+        } while(maximum_distance <=0);
+
+        target.x = x_target;
+        target.y = y_target;
+        target.direction = direction.at(0);
+    }
 }
+/*---------------------------------------------------------------------
+ * Method: check_destination(bool)
+ * Scope:  Global
+ * This function will check the target point with the current point. If they
+ * are the same then returns true. Otherwise, return false
+ *---------------------------------------------------------------------*/
 bool check_destination(Point target, Point point){
     if (target.x == point.x && target.y == point.y && target.direction == point.direction) {
         return true;
     }
     return false;
 }
-
+/*---------------------------------------------------------------------
+ * Method: find_path_to_destination(void)
+ * Scope:  Global
+ * This function will use the concept of DFS to find the part between
+ * 2 locations in the map
+ *---------------------------------------------------------------------*/
 void find_path_to_destination(Point original, Point target,int numStep, list<string>& action_path){
     int count =0;
     queue<Point> list_point;
     list_point.push(original);
+
     while (count++ < numStep) {
         add_new_point(original, target, list_point, action_path, numStep- count);
-        std::cout << "/* message */" << '\n';
-        for (size_t i = 0; i < list_point.size(); i++) {
-            std::cout << "x: " << list_point.front().x <<"  y: "<<list_point.front().y
-                <<"  direction: "<<list_point.front().direction<<
-                "  path: "<<list_point.front(). path<<endl;;
-            list_point.push(list_point.front());
-            list_point.pop();
-        }
+        // std::cout << "/* message */" << '\n';
+        // for (size_t i = 0; i < list_point.size(); i++) {
+        //     std::cout << "x: " << list_point.front().x <<"  y: "<<list_point.front().y
+        //         <<"  direction: "<<list_point.front().direction<<
+        //         "  path: "<<list_point.front(). path<<endl;;
+        //     list_point.push(list_point.front());
+        //     list_point.pop();
+        // }
     }
 
 
 }
+/*---------------------------------------------------------------------
+ * Method: add_new_point(void)
+ * Scope:  Global
+ * This function will try all step from the current point which are moving forward,
+ * turning left and turning right
+ *---------------------------------------------------------------------*/
 void add_new_point(Point original, Point target,queue<Point>& list_point, list<string>& action_path,
                     int maximum_distance){
-
+    //get the size of the input list
     int size = list_point.size();
 
     for (int i = 0; i < size; i++) {
@@ -227,5 +302,69 @@ void check_destination_and_update_list(queue<Point>& list_point, list<string>& a
 void optimal_add_element(queue<Point>& list_point, Point point,Point target, int maximum_distance){
     if (abs(point.x - target.x)+ abs(point.y - target.y) <= maximum_distance) {
         list_point.push(point);
+    }
+}
+
+void part1(Point original, Point target, string actions){
+    actions.erase(std::remove(actions.begin(), actions.end(), ','), actions.end());
+    for (size_t i = 0; i < actions.length(); i++) {
+        if(actions.at(i) == 'M')
+            moveForward(original);
+        else if (actions.at(i) == 'L')
+            turnLeft(original);
+        else if(actions.at(i) == 'R')
+            turnRight(original);
+        else //if it contains anymore character than that, then returns
+            return;
+    }
+    cout <<"Location: ["<<original.x<<","<<original.y<<"]\n";
+    cout<<"Direction faced: "<<original.direction<<endl;
+}
+void moveForward(Point& point){
+    if (point.direction == 'N') {
+        if(point.y != 8)
+            point.y++;
+    }
+    else if (point.direction == 'S') {
+        if (point.y !=1)
+            point.y--;
+    }
+    else if(point.direction == 'E'){
+        if (point.x !=8)
+            point.x ++;
+    }
+    else if(point.direction == 'W'){
+        if (point.x !=1)
+            point.x --;
+    }
+}
+
+void turnLeft(Point &point){
+    if (point.direction == 'N') {
+        point.direction = 'W';
+    }
+    else if (point.direction == 'S') {
+        point.direction = 'E';
+    }
+    else if(point.direction == 'E'){
+        point.direction = 'N';
+    }
+    else if(point.direction == 'W'){
+        point.direction = 'S';
+    }
+}
+
+void turnRight(Point &point){
+    if (point.direction == 'N') {
+        point.direction = 'E';
+    }
+    else if (point.direction == 'S') {
+        point.direction = 'W';
+    }
+    else if(point.direction == 'E'){
+        point.direction = 'S';
+    }
+    else if(point.direction == 'W'){
+        point.direction = 'N';
     }
 }
