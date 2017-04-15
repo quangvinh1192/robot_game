@@ -21,7 +21,7 @@ void check_destination_and_update_list(queue<Point>& list_point, list<string>& a
         Point forward, Point left, Point right, Point target, int maximum_distance);
 void find_path_to_destination(Point original, Point target,int numStep, list<string>& action_path);
 void optimal_add_element(queue<Point>& list_point, Point point,Point target, int maximum_distance);
-void part1(Point original, Point target, string actions);
+void version1(Point original, Point target, string actions);
 void moveForward(Point& point);
 void turnLeft(Point& point);
 void turnRight(Point& point);
@@ -33,11 +33,11 @@ int main(int argc, char const *argv[]) {
     list<string> action_path;
     string actions, user_decision;
     do {
-        cout<<"Please enter 1 to run part1, enter 2 to run part 2 or enter e to exit: ";
+        cout<<"\n\nPlease enter 1 to run version 1, enter 2 to run version 2 or enter e to exit: ";
         cin>>user_decision;
         if (user_decision == "1") {
             get_input(original, target, true, numStep,actions);
-            part1(original, target, actions);
+            version1(original, target, actions);
         }
         else if(user_decision == "2"){
             get_input(original, target, true, numStep,actions);
@@ -47,6 +47,7 @@ int main(int argc, char const *argv[]) {
 
     return 0;
 }
+
 /*---------------------------------------------------------------------
  * Method: get_input(void)
  * Scope:  Global
@@ -169,16 +170,14 @@ void add_new_point(Point original, Point target,queue<Point>& list_point, list<s
                     int maximum_distance){
     //get the size of the input list
     int size = list_point.size();
-
     for (int i = 0; i < size; i++) {
         Point working= list_point.front();
         string original_path(working.path);
         Point point_move_forward, point_turn_left, point_turn_right;
         point_move_forward.direction='o';//create dummy value
         switch (working.direction) {
-
             case 'S':
-                //if robot is not x=1, it can move forward
+                //if robot is not y=1, it can move forward to the S
                 if (working.y != 1) {
                     point_move_forward.x = working.x;
                     point_move_forward.y = working.y - 1;
@@ -201,7 +200,7 @@ void add_new_point(Point original, Point target,queue<Point>& list_point, list<s
                 break;
 
             case 'N':
-                //if robot is not x=0, it can move forward
+                //if robot is not y=8, it can move forward to the N
                 if (working.y != 8) {
                     point_move_forward.x = working.x;
                     point_move_forward.y = working.y+1;
@@ -224,7 +223,7 @@ void add_new_point(Point original, Point target,queue<Point>& list_point, list<s
                 break;
 
             case 'W':
-                //
+                //if robot is not x=1, it can move forward to the W
                 if (working.x != 1) {
                     point_move_forward.x = working.x -1;
                     point_move_forward.y = working.y;
@@ -232,13 +231,13 @@ void add_new_point(Point original, Point target,queue<Point>& list_point, list<s
                     point_move_forward.path= original_path;
                     point_move_forward.path.append(",M");
                 }
-                //
+                //robot can turn left
                 point_turn_left.x = working.x;
                 point_turn_left.y = working.y;
                 point_turn_left.direction= 'N';
                 point_turn_left.path= original_path;
                 point_turn_left.path.append(",R");
-
+                //robot can turn right
                 point_turn_right.x = working.x;
                 point_turn_right.y = working.y;
                 point_turn_right.direction= 'S';
@@ -246,7 +245,7 @@ void add_new_point(Point original, Point target,queue<Point>& list_point, list<s
                 point_turn_right.path.append(",L");
                 break;
             case 'E':
-                //
+                //if robot is not x=8, it can move forward to the W
                 if (working.x != 8) {
                     point_move_forward.x = working.x + 1;
                     point_move_forward.y = working.y;
@@ -254,13 +253,13 @@ void add_new_point(Point original, Point target,queue<Point>& list_point, list<s
                     point_move_forward.path= original_path;
                     point_move_forward.path.append(",M");
                 }
-                //
+                //robot can turn left
                 point_turn_left.x = working.x;
                 point_turn_left.y = working.y;
                 point_turn_left.direction= 'S';
                 point_turn_left.path= original_path;
                 point_turn_left.path.append(",R");
-
+                //robot can turn right
                 point_turn_right.x = working.x;
                 point_turn_right.y = working.y;
                 point_turn_right.direction= 'N';
@@ -270,42 +269,62 @@ void add_new_point(Point original, Point target,queue<Point>& list_point, list<s
 
             default:
                 std::cerr << "something's wrong" << '\n';
+                return;
+                break;
 
         }
+        // update the list and check the destination
         check_destination_and_update_list(list_point, action_path, point_move_forward,
             point_turn_left, point_turn_right, target, maximum_distance);
+        //pop that location because we didn't need it anymore
         list_point.pop();
     }
 }
-
+/*---------------------------------------------------------------------
+ * Method: check_destination_and_update_list(void)
+ * Scope:  Global
+ * This function will try all step from the current point which are moving forward,
+ * turning left and turning right
+ *---------------------------------------------------------------------*/
 void check_destination_and_update_list(queue<Point>& list_point, list<string>& action_path,
         Point forward, Point left, Point right, Point target, int maximum_distance){
-    // check point which is moving forwarding
+    // if this is summy location, then we didn't check
     if (forward.direction != 'o') {
-        if (check_destination(target, forward)){
+        if (check_destination(target, forward))
             action_path.push_back(forward.path);
-        }
         optimal_add_element(list_point, forward, target, maximum_distance);
     }
-    if (check_destination(target, left)){
+    //checl left and right location
+    if (check_destination(target, left))
         action_path.push_back(left.path);
-    }
-
-    if (check_destination(target, right)){
+    if (check_destination(target, right))
         action_path.push_back(right.path);
-    }
+    //call this functions to add the only needed location to the list
     optimal_add_element(list_point, left, target, maximum_distance);
     optimal_add_element(list_point, right, target, maximum_distance);
-
 }
-
+/*---------------------------------------------------------------------
+ * Method: optimal_add_element(void)
+ * Scope:  Global
+ * This function will check the current location with the target location.
+ * For example, when robot is at [2,3] and the destination is at [4,5]
+ * then it needs at least 4 steps to get there. We can remove unnecessary location
+ * to the list
+ *---------------------------------------------------------------------*/
 void optimal_add_element(queue<Point>& list_point, Point point,Point target, int maximum_distance){
     if (abs(point.x - target.x)+ abs(point.y - target.y) <= maximum_distance) {
         list_point.push(point);
     }
 }
 
-void part1(Point original, Point target, string actions){
+/*---------------------------------------------------------------------
+ * Method: version1(void)
+ * Scope:  Global
+ * This function will print the outcome; direction faced and position on the board
+ * when users enter a starting position [x,y] (0<x,y<9), initial direction faced
+ * (W, S, N, E) on 8 x 8 square board and sequence of actions for a robot
+ *---------------------------------------------------------------------*/
+void version1(Point original, Point target, string actions){
     actions.erase(std::remove(actions.begin(), actions.end(), ','), actions.end());
     for (size_t i = 0; i < actions.length(); i++) {
         if(actions.at(i) == 'M')
@@ -320,25 +339,31 @@ void part1(Point original, Point target, string actions){
     cout <<"Location: ["<<original.x<<","<<original.y<<"]\n";
     cout<<"Direction faced: "<<original.direction<<endl;
 }
+/*---------------------------------------------------------------------
+ * Method: moveForward(void)
+ * Scope:  Global
+ * This function will check the direction and location in order to move Forward
+ * the robot
+ *---------------------------------------------------------------------*/
 void moveForward(Point& point){
-    if (point.direction == 'N') {
-        if(point.y != 8)
-            point.y++;
+    if (point.direction == 'N' && point.y != 8) {
+        point.y++;
     }
-    else if (point.direction == 'S') {
-        if (point.y !=1)
-            point.y--;
+    else if (point.direction == 'S' && point.y !=1) {
+        point.y--;
     }
-    else if(point.direction == 'E'){
-        if (point.x !=8)
-            point.x ++;
+    else if(point.direction == 'E' && point.x !=8){
+        point.x ++;
     }
-    else if(point.direction == 'W'){
-        if (point.x !=1)
-            point.x --;
+    else if(point.direction == 'W' && point.x !=1){
+        point.x --;
     }
 }
-
+/*---------------------------------------------------------------------
+ * Method: turnLeft(void)
+ * Scope:  Global
+ * This function will turn left
+ *---------------------------------------------------------------------*/
 void turnLeft(Point &point){
     if (point.direction == 'N') {
         point.direction = 'W';
@@ -353,7 +378,11 @@ void turnLeft(Point &point){
         point.direction = 'S';
     }
 }
-
+/*---------------------------------------------------------------------
+ * Method: moveForward(void)
+ * Scope:  Global
+ * This function will turn right
+ *---------------------------------------------------------------------*/
 void turnRight(Point &point){
     if (point.direction == 'N') {
         point.direction = 'E';
