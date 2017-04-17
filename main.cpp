@@ -23,8 +23,7 @@ void version2(Point original, Point target,int numStep);
 void optimal_add_element(queue<Point>& list_point, Point point,Point target, int maximum_distance);
 void version1(Point original, Point target, string actions);
 bool moving_Forward(const Point current_point, Point& updated_point);
-void turning_Left(const Point current_point, Point& updated_point);
-void turning_Right(const Point current_point, Point& updated_point);
+void turning_Left_Right(const Point current_point, Point& left_point, Point& right_point);
 void testAll();
 
 int main(int argc, char const *argv[]) {
@@ -33,9 +32,9 @@ int main(int argc, char const *argv[]) {
     int numStep ;
     string actions, user_decision;
 
-    // testAll(); //Calling testing function
+    testAll(); //Calling testing function
     do {
-        cout<<"\n\nPlease enter 1 to run version 1, enter 2 to run version 2 or enter e to exit: ";
+        cout<<"\n\nPlease enter 1 to run a version 1, enter 2 to run a version 2 or enter e to exit: ";
         getline(cin, user_decision);
         if (user_decision == "1") {
             get_input(original, target, true, numStep,actions);
@@ -220,8 +219,7 @@ void add_Possible_Moving(Point target,queue<Point>& list_point, list<string>& ac
                 if (!moving_Forward(working, point_move_forward)) {
                     point_move_forward.direction= 'o';
                 }
-                turning_Left(working, point_turn_left);
-                turning_Right(working, point_turn_right);
+                turning_Left_Right(working, point_turn_left, point_turn_right);
                 break;
             default:
                 std::cerr << "invalid direction" << '\n';
@@ -283,6 +281,7 @@ void optimal_add_element(queue<Point>& list_point, Point point,Point target, int
  *---------------------------------------------------------------------*/
 void version1(Point original, Point target, string actions){
     int actions_length ;
+    Point dummy_point;
     //remove all the comma from input string, or space and convert in into uppercase
     actions.erase(std::remove(actions.begin(), actions.end(), ','), actions.end());
     actions_length = actions.length();
@@ -297,9 +296,9 @@ void version1(Point original, Point target, string actions){
             }
         }
         else if (actions.at(i) == 'L')
-            turning_Left(original, original);
+            turning_Left_Right(original, original, dummy_point);
         else if(actions.at(i) == 'R')
-            turning_Right(original, original);
+            turning_Left_Right(original, dummy_point, original);
         else //if it contains anymore character than that
         {
             std::cerr << "Error: Robot doesn't know the action "<< actions.at(i)<<
@@ -344,57 +343,37 @@ bool moving_Forward(const Point current_point, Point& updated_point){
     return true;
 }
 /*---------------------------------------------------------------------
- * Method: turning_Left(void)
+ * Method: turning_Left_Right(void)
  * Scope:  Global
  * This function will update the current location of the robot after turning
- * left. This function only updates the direction and path
+ * left and right. This function only updates the direction and path
  *---------------------------------------------------------------------*/
-void turning_Left(const Point current_point, Point& updated_point){
+void turning_Left_Right(const Point current_point, Point& left_point, Point& right_point){
     //initial values and updated robot's information
-    updated_point.x = current_point.x;
-    updated_point.y = current_point.y;
-    updated_point.path = current_point.path;
-    updated_point.path.append(",L");
+    left_point.x = right_point.x= current_point.x;
+    left_point.y = right_point.y = current_point.y;
+    left_point.path = right_point.path = current_point.path;
+    left_point.path.append(",L");
+    right_point.path.append(",R");
     //there is 4 posible directions with 4 posible movements
     if (current_point.direction == 'N') {
-        updated_point.direction = 'W';
+        left_point.direction = 'W';
+        right_point.direction = 'E';
     }
     else if (current_point.direction == 'S') {
-        updated_point.direction = 'E';
+        left_point.direction = 'E';
+        right_point.direction = 'W';
     }
     else if(current_point.direction == 'E'){
-        updated_point.direction = 'N';
+        left_point.direction = 'N';
+        right_point.direction = 'S';
     }
     else if(current_point.direction == 'W'){
-        updated_point.direction = 'S';
+        left_point.direction = 'S';
+        right_point.direction = 'N';
     }
 }
-/*---------------------------------------------------------------------
- * Method: moving_Forward(void)
- * Scope:  Global
- * This function will update the current location of the robot after turning
- * right. This function only updates the direction and path
- *---------------------------------------------------------------------*/
-void turning_Right(const Point current_point, Point& updated_point){
-    //update initial values and path
-    updated_point.x = current_point.x;
-    updated_point.y = current_point.y;
-    updated_point.path = current_point.path;
-    updated_point.path.append(",R");
-    //there is 4 posible directions with 4 posible movements
-    if (current_point.direction == 'N') {
-        updated_point.direction = 'E';
-    }
-    else if (current_point.direction == 'S') {
-        updated_point.direction = 'W';
-    }
-    else if(current_point.direction == 'E'){
-        updated_point.direction = 'S';
-    }
-    else if(current_point.direction == 'W'){
-        updated_point.direction = 'N';
-    }
-}
+
 
 /*---------------------------------------------------------------------
  * Method: testAll(void)
@@ -404,7 +383,7 @@ void turning_Right(const Point current_point, Point& updated_point){
  *---------------------------------------------------------------------*/
 void testAll(){
     Point special_0,special_1,special_2,special_3;
-    Point normal_1, normal_2, target, test_point;
+    Point normal_1, normal_2, target, left_point_test, right_point_test;
     //initial some test points
     special_0.x = 1;
     special_0.y = 1;
@@ -424,56 +403,49 @@ void testAll(){
     target.x = 3;
     target.y = 4;
     target.direction = 'S';
-    //Test turning_Right function.
-    turning_Right(special_0, test_point);
-    assert(test_point.x == 1);
-    assert(test_point.y == 1);
-    assert(test_point.direction == 'W');
-    turning_Right(normal_1, test_point);
-    assert(test_point.x == 2);
-    assert(test_point.y == 3);
-    assert(test_point.direction == 'E');
-    turning_Right(special_1, test_point);
-    assert(test_point.direction == 'S');
-    turning_Right(special_3, test_point);
-    assert(test_point.direction == 'N');
-
-    //test turn left function
-    turning_Left(special_1, test_point);
-    assert(test_point.x == 1);
-    assert(test_point.y == 8);
-    assert(test_point.direction == 'N');
-    turning_Left(normal_1, test_point);
-    assert(test_point.x == 2);
-    assert(test_point.y == 3);
-    assert(test_point.direction == 'W');
-    turning_Left(special_0, test_point);
-    assert(test_point.direction == 'E');
-    turning_Left(special_3, test_point);
-    assert(test_point.direction == 'S');
-
+    //Test turning_Left_Right function.
+    turning_Left_Right(special_0, left_point_test, right_point_test);
+    assert(left_point_test.x == 1);
+    assert(right_point_test.x == 1);
+    assert(left_point_test.y == 1);
+    assert(right_point_test.y == 1);
+    assert(right_point_test.direction == 'W');
+    assert(left_point_test.direction == 'E');
+    //test normal point
+    turning_Left_Right(normal_1, left_point_test, right_point_test);
+    assert(left_point_test.x == 2);
+    assert(right_point_test.x == 2);
+    assert(left_point_test.y == 3);
+    assert(right_point_test.y == 3);
+    assert(right_point_test.direction == 'E');
+    assert(left_point_test.direction == 'W');
+    turning_Left_Right(special_1, left_point_test, right_point_test);
+    assert(right_point_test.direction == 'S');
+    assert(left_point_test.direction == 'N');
+    turning_Left_Right(special_3, left_point_test, right_point_test);
+    assert(right_point_test.direction == 'N');
+    assert(left_point_test.direction == 'S');
     //test moving_Forward for special point [1,1],[1,8],[8,1],[8,8],
-    assert(moving_Forward(special_0, test_point) == false);
-    assert(test_point.x == 1); assert(test_point.y == 1);
-    assert(test_point.direction == 'S');
-    assert(moving_Forward(special_1, test_point) == true);
-    assert(test_point.x == 2); assert(test_point.y == 8);
-    assert(test_point.direction == 'E');
-    assert(moving_Forward(special_2, test_point) == true);
-    assert(test_point.x == 8); assert(test_point.y == 2);
-    assert(test_point.direction == 'N');
-    assert(moving_Forward(special_3, test_point) == true);
-    assert(test_point.x == 7); assert(test_point.y == 8);
-    assert(test_point.direction == 'W');
+    assert(moving_Forward(special_0, left_point_test) == false);
+    assert(left_point_test.x == 1); assert(left_point_test.y == 1);
+    assert(left_point_test.direction == 'S');
+    assert(moving_Forward(special_1, left_point_test) == true);
+    assert(left_point_test.x == 2); assert(left_point_test.y == 8);
+    assert(left_point_test.direction == 'E');
+    assert(moving_Forward(special_2, left_point_test) == true);
+    assert(left_point_test.x == 8); assert(left_point_test.y == 2);
+    assert(left_point_test.direction == 'N');
+    assert(moving_Forward(special_3, left_point_test) == true);
+    assert(left_point_test.x == 7); assert(left_point_test.y == 8);
+    assert(left_point_test.direction == 'W');
 
     //test for updating the path
     normal_1.path="";
-    turning_Left(normal_1, test_point);
-    assert(test_point.path == ",L");
-    turning_Right(normal_1, test_point);
-    assert(test_point.path == ",R");
-    assert(moving_Forward(normal_1, test_point) == true);
-    assert(test_point.path == ",M");
+    turning_Left_Right(normal_1, left_point_test, right_point_test);
+    assert(left_point_test.path == ",L");
+    assert(right_point_test.path == ",R");
+    assert(moving_Forward(normal_1, left_point_test) == true);
+    assert(left_point_test.path == ",M");
 
     // Test optimal_add_element
     queue<Point> list_point;
@@ -489,10 +461,10 @@ void testAll(){
     // check the input location is the same as the destination
     assert(check_destination(special_0,special_1) == false);
     assert(check_destination(target,target) == true);
-    test_point.x = 3;
-    test_point.y = 4;
-    test_point.direction = 'S';
-    assert(check_destination(test_point,target) == true);
+    left_point_test.x = 3;
+    left_point_test.y = 4;
+    left_point_test.direction = 'S';
+    assert(check_destination(left_point_test,target) == true);
 
     //test add_Possible_Moving function
     list<string> action_path ;
@@ -500,14 +472,14 @@ void testAll(){
     list_point.push(normal_1);
     add_Possible_Moving(target,list_point,action_path,1);
     //in this function, i add an optimal function that check every location before
-    //putting in the list. There is one way to get to [3,4] in 1 remaining action allowed, so
-    //this list is emply.
+    //putting in the list. 1 means we can get to the direction if we have 1 more actions allowed
     assert(list_point.size() == 1);
     assert(action_path.size() == 0);//it cannot get to the destination
+
+
     while(!list_point.empty()) list_point.pop(); //remove everything from list
-    /*In order to get to [3,4] from [2,3] and we only allow 2 actions,
-    We can only moving forward. Turn left and turn right seems imposible to get there
-    Therefore, list_point has size is 1*/
+    /*In order to get to [3,4] from [2,3] and we only allow 2 more actions,
+    We can only moving forward, turn left and turn right. That's why list_point is 3*/
     list_point.push(normal_1);
     add_Possible_Moving(target,list_point,action_path,2);
     assert(list_point.size() == 3);
@@ -516,7 +488,7 @@ void testAll(){
 
     /*In order to get to [3,4] from [2,3] and we only allow 4 actions,
     robot maybe move forward, turn left or turn right, so robot will try all of them
-    Therefore, list_point has size is 4. After the first step, it cannot get to the destination
+    Therefore, list_point has size of 3. After the first step, it cannot get to the destination
     location, so action_path is 0*/
     list_point.push(normal_1);
     add_Possible_Moving(target,list_point,action_path,4);
@@ -525,8 +497,8 @@ void testAll(){
     while(!list_point.empty()) list_point.pop();
 
     /*In order to get to [3,4] S from [3,4], E and we only allow 1 actions,
-    robot maybe turn left or turn right, but it cannot move forward. Therefore,
-    list_point is 2. Moreover, robot can turn right and get to the destination,
+    robot maybe turn left or turn right, and it can move forward. Therefore,
+    list_point is 3. Moreover, robot can turn right and get to the destination,
     so the action_path is 1. action_path contains the direction to get to that target*/
     normal_2.x = 3;
     normal_2.y = 4;
