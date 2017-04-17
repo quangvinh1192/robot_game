@@ -1,10 +1,9 @@
-author: Vinh Tran
-email: vqt004@ucsd.edu
+author: Vinh Tran<br />
+email: vqt004@ucsd.edu<br />
 --------------------------------------------------------------------------------
 # Version1.
-The program reads the input information from the command line and  
-it checks/validate the input before processing the data. After that, it will call
-version1 function to do this job.
+The program reads the input information from the command line and  it checks/validate
+the input before processing the data. After that, it will call version1 function to do this job.
 Algorithm: When the program reads an action, it will perform that action and display
 the result to users.
 Error: When users enter an invalid position, direction faced or actions,
@@ -29,6 +28,7 @@ HOW TO RUN IT:
 In the robot_game folder, type "./robot" to run it.
 Enter 1 and press enter to run the version 1. Please give the correct input information.
 This is an simple example to run it:
+'''
 ./robot
 Please enter 1 to run version 1, enter 2 to run version 2 or enter e to exit: 1
 Please enter the information below:
@@ -39,14 +39,16 @@ Actions: M,M,L
 Robot is at:
 Location: [2,5]
 Direction faced: W
+'''
 
 Note: position has to enter by this format: [x,y]
 Direction faced can be lower/uppercase
 Actions: has to be separated by comma and can be lower/uppercase
 
 Here is an example output with error message:
+'''
 Please enter 1 to run version 1, enter 2 to run version 2 or enter e to exit: 1
-Please enter the informarion below:
+Please enter the information below:
 Original position (e.g [2,3]): [4,1]
 Original Direction faced (e.g N): S
 Actions: M,M,L
@@ -56,7 +58,7 @@ Error: Robot cannot move 1 square forward at step: 2 because it's at [4,1] direc
 Robot is at:
 Location: [4,1]
 Direction faced: E
-
+'''
 EXIT PROGRAM by type e and press enter.
 
 --------------------------------------------------------------------------------
@@ -80,6 +82,7 @@ HOW TO RUN IT:
 It's similar to version1. We go to the robot_game folder in the command line,
 and type ./robot
 This is an example output when running it successfully:
+'''
 Please enter 1 to run version 1, enter 2 to run version 2 or enter e to exit: 2
 Please enter the information below:
 Original position (e.g [2,3]): [2,3]
@@ -90,8 +93,9 @@ Maximum actions allowed: 4
 
 Actions - 1 :M,R,M,R
 No more possible actions!
-
+'''
 Another example which cannot find any path:
+'''
 Please enter 1 to run version 1, enter 2 to run version 2 or enter e to exit: 2
 Please enter the information below:
 Original position (e.g [2,3]): [1,1]
@@ -100,6 +104,7 @@ Target position (e.g [3,4]): [2,3]
 Target position faced (e.g S): n
 Maximum actions allowed: 4
 No possible actions!
+'''
 --------------------------------------------------------------------------------
 HOW TO TEST IT:
 I test it by using testAll function. I write some simple test cases and try to
