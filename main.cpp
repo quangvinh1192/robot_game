@@ -3,8 +3,7 @@
 #include <list> //used for list
 #include <queue> //used for queue
 #include <stdlib.h> //used for abs
-#include <locale>         //std::toupper
-#include <algorithm>
+#include <locale>    //std::toupper
 #include <assert.h>
 #include "point.h"
 
@@ -15,37 +14,38 @@ using namespace std;
 
 void get_input(Point& original, Point& target, bool isPart1, int& maximum_distance,
     string& actions);
-void add_new_point(Point original, Point target,queue<Point>& list_point, list<string>& action_path,
+void add_Possible_Moving(Point target,queue<Point>& list_point, list<string>& action_path,
                     int maximum_distance);
 bool check_destination(Point target, Point point);
 void check_destination_and_update_list(queue<Point>& list_point, list<string>& action_path,
         Point forward, Point left, Point right, Point target, int maximum_distance);
-void version2(Point original, Point target,int numStep, list<string>& action_path);
+void version2(Point original, Point target,int numStep);
 void optimal_add_element(queue<Point>& list_point, Point point,Point target, int maximum_distance);
 void version1(Point original, Point target, string actions);
 bool moving_Forward(const Point current_point, Point& updated_point);
 void turning_Left(const Point current_point, Point& updated_point);
 void turning_Right(const Point current_point, Point& updated_point);
-void test();
+void testAll();
 
 int main(int argc, char const *argv[]) {
+    //original,target, numStep, actions are the input from users
     Point original, target;
     int numStep ;
-    list<string> action_path;
     string actions, user_decision;
-    test();
-    // do {
-    //     cout<<"\n\nPlease enter 1 to run version 1, enter 2 to run version 2 or enter e to exit: ";
-    //     cin>>user_decision;
-    //     if (user_decision == "1") {
-    //         get_input(original, target, true, numStep,actions);
-    //         version1(original, target, actions);
-    //     }
-    //     else if(user_decision == "2"){
-    //         get_input(original, target, false, numStep,actions);
-    //         version2(original, target,numStep, action_path);
-    //     }
-    // } while(user_decision != "e");
+
+    // testAll(); //Calling testing function
+    do {
+        cout<<"\n\nPlease enter 1 to run version 1, enter 2 to run version 2 or enter e to exit: ";
+        getline(cin, user_decision);
+        if (user_decision == "1") {
+            get_input(original, target, true, numStep,actions);
+            version1(original, target, actions);
+        }
+        else if(user_decision == "2"){
+            get_input(original, target, false, numStep,actions);
+            version2(original, target,numStep);
+        }
+    } while(user_decision != "e");
     return 0;
 }
 
@@ -60,71 +60,87 @@ void get_input(Point& original, Point& target, bool isPart1, int& maximum_distan
     string& actions){
     //these variable to hold the input from users
     int x_original, y_original, x_target, y_target;
-    string direction;
+    string direction, original_string;;
 
-    cout<<"Please enter the informarion below: \n";
+    cout<<"Please enter the information below: \n";
     //Users enter the location and Direction faced
     do {
-        string original_string;
         cout <<"Original position (e.g [2,3]): ";
-        cin >>original_string;
+        getline(cin, original_string);
         x_original = original_string.at(1)-'0';
         y_original = original_string.at(3)-'0';
-        if (x_original >MAX_INDEX || x_original< MIN_INDEX || y_original < MIN_INDEX || y_original>MAX_INDEX) {
+        if (original_string.length()==4 && (x_original >MAX_INDEX || x_original< MIN_INDEX ||
+                                        y_original <MIN_INDEX || y_original>MAX_INDEX)) {
             cout<<"Please enter again.[x,y](0<x,y<9)\n";
         }
-    } while(x_original>MAX_INDEX || x_original<MIN_INDEX || y_original <MIN_INDEX || y_original>MAX_INDEX);
+
+    } while(original_string.length()==4 && (x_original >MAX_INDEX || x_original< MIN_INDEX ||
+                                    y_original <MIN_INDEX || y_original>MAX_INDEX));
     //get original direction
     do {
         cout << "Original Direction faced (e.g N): ";
-        cin >> direction;
+        getline(cin, direction);
         direction[0] = toupper(direction[0]);
-        if (direction !="N" && direction !="S" &&direction !="W" &&direction !="E") {
+        if (direction !="N" && direction !="S" &&direction !="W" &&direction !="E"
+                            && direction.length()==1) {
             cout<<"Please enter again. Only using N,S,W or E\n";
         }
-    } while(direction !="N" && direction !="S" &&direction !="W" &&direction !="E");
-
+    } while(direction !="N" && direction !="S" &&direction !="W" &&direction !="E"
+                            && direction.length()==1);
+    //initial the original
     original.x = x_original;
     original.y = y_original;
     original.direction = direction.at(0);
     //this is for part 1, get the actions and print out the result
     if (isPart1) {
+        bool valid_actions = true;
         do {
+            //get actions and remove any empty space between any character
             cout <<"Actions: ";
-            cin >> actions;
-            actions.append(",");
-            if (actions == "") {
-                cout<<"Please enter again. e.g M,M,M,L,M,R,R,\n";
+            getline(cin, actions);
+            actions.erase(std::remove(actions.begin(), actions.end(), ' '), actions.end());
+            //validation the input
+            for (int i = 0; i < actions.length(); i++) {
+                if (toupper(actions[i])!='M' && toupper(actions[i])!='L' &&
+                        toupper(actions[i])!='R' && toupper(actions[i])!=',') {
+                    valid_actions = false;
+                }
             }
-        } while(actions == "");
-
+            if (!valid_actions) {
+                cout << "Actions only contains: 'M', 'L', 'R' or ','" << '\n';
+            }
+        } while(!valid_actions);
     }
     else{
         //this is for the second part
         //get the targer position and maximum actions allowed
         do {
-            string original_string;
             cout <<"Target position (e.g [3,4]): ";
-            cin >>original_string;
+            getline(cin, original_string);
             x_target = original_string.at(1)-'0';
             y_target = original_string.at(3)-'0';
-            if (x_target>MAX_INDEX || x_target<MIN_INDEX || y_target <MIN_INDEX || y_target>MAX_INDEX) {
+            if (original_string.length()==4 && (x_target >MAX_INDEX || x_target< MIN_INDEX ||
+                                            y_target <MIN_INDEX || y_target>MAX_INDEX)) {
                 cout<<"Please enter again. [x,y](0<x,y<9)\n";
             }
-        } while(x_target>MAX_INDEX || x_target<MIN_INDEX || y_target <MIN_INDEX || y_target>MAX_INDEX);
+        } while(original_string.length()==4 && (x_target >MAX_INDEX || x_target< MIN_INDEX ||
+                                        y_target <MIN_INDEX || y_target>MAX_INDEX));
         //get position faced
         do {
             cout << "Target position faced (e.g S): ";
-            cin >> direction;
+            getline(cin, direction);
             direction[0] = toupper(direction[0]);
-            if (direction !="N" && direction !="S" &&direction !="W" &&direction !="E") {
-                cout<<"Please enter again. Only using N,S,W or E\n";
+            if (direction !="N" && direction !="S" &&direction !="W" &&direction !="E"
+                        && direction.length()== 1) {
+                cout<<"Please enter again. Only using 'N','S','W' or 'E'\n";
             }
-        } while(direction !="N" && direction !="S" &&direction !="W" &&direction !="E");
+        } while(direction !="N" && direction !="S" &&direction !="W" &&direction !="E"
+                            && direction.length()== 1);
         //get actions allowed
         do {
             cout<<"Maximum actions allowed: ";
             cin>> maximum_distance;
+            cin.ignore();
         } while(maximum_distance <=0);
         //initial target object
         target.x = x_target;
@@ -140,33 +156,30 @@ void get_input(Point& original, Point& target, bool isPart1, int& maximum_distan
  * This function will use the concept of DFS to find the part between
  * 2 locations in the map
  *---------------------------------------------------------------------*/
-void version2(Point original, Point target,int numStep, list<string>& action_path){
-    int count =0;
+void version2(Point original, Point target,int numStep){
+    int count =0; //count to count number of steps that robot has moved.
+    //action_path: keep track the posible path which robot can move to get to the target
+    list<string> action_path;
+    //list_point: contains the locations which robot can get there from original location
     queue<Point> list_point;
     list_point.push(original);
-
+    //for every steps, calling add_Possible_Moving to get all possible movements
     while (count++ < numStep) {
-        add_new_point(original, target, list_point, action_path, numStep- count);
-        // std::cout << "/* message */" << '\n';
-        // for (size_t i = 0; i < list_point.size(); i++) {
-        //     std::cout << "x: " << list_point.front().x <<"  y: "<<list_point.front().y
-        //         <<"  direction: "<<list_point.front().direction<<
-        //         "  path: "<<list_point.front(). path<<endl;;
-        //     list_point.push(list_point.front());
-        //     list_point.pop();
-        // }
+        add_Possible_Moving(target, list_point, action_path, numStep- count);
     }
+    //print out the result
     if (action_path.empty()) {
-        std::cout << "No possible actions!" << '\n';
+        cout << "No possible actions!" << '\n';
     }
     else{
+        cout << '\n';
         int numAction =1;
         while (!action_path.empty()) {
-            std::cout << "Actions - " << numAction ++ <<" :";
-            std::cout << action_path.front().erase(0, 1)<< '\n';
+            cout << "Actions - " << numAction ++ <<" :";
+            cout << action_path.front().erase(0, 1)<< '\n';
             action_path.pop_front();
         }
-        std::cout << "No more possible actions!" << '\n';
+        cout << "No more possible actions!" << '\n';
     }
 }
 
@@ -184,12 +197,12 @@ bool check_destination(Point target, Point point){
 }
 
 /*---------------------------------------------------------------------
- * Method: add_new_point(void)
+ * Method: add_Possible_Moving(void)
  * Scope:  Global
  * This function will try all step from the current point which are moving forward,
  * turning left and turning right
  *---------------------------------------------------------------------*/
-void add_new_point(Point original, Point target,queue<Point>& list_point, list<string>& action_path,
+void add_Possible_Moving(Point target,queue<Point>& list_point, list<string>& action_path,
                     int maximum_distance){
     //get the size of the input list
     int size = list_point.size();
@@ -211,7 +224,7 @@ void add_new_point(Point original, Point target,queue<Point>& list_point, list<s
                 turning_Right(working, point_turn_right);
                 break;
             default:
-                std::cerr << "something's wrong" << '\n';
+                std::cerr << "invalid direction" << '\n';
                 return;
                 break;
         }
@@ -257,6 +270,7 @@ void optimal_add_element(queue<Point>& list_point, Point point,Point target, int
     if (abs(point.x - target.x)+ abs(point.y - target.y) <= maximum_distance) {
         list_point.push(point);
     }
+
 }
 
 /////////////////////////----> PART1 <-----///////////////////////////
@@ -271,15 +285,14 @@ void version1(Point original, Point target, string actions){
     int actions_length ;
     //remove all the comma from input string, or space and convert in into uppercase
     actions.erase(std::remove(actions.begin(), actions.end(), ','), actions.end());
-    actions.erase(std::remove(actions.begin(), actions.end(), ' '), actions.end());
     actions_length = actions.length();
     transform(actions.begin(), actions.end(), actions.begin(), ::toupper);
     //everytime, robot can try 1 of 3 posible actions per step
     for (size_t i = 0; i < actions_length; i++) {
         if(actions.at(i) == 'M'){
             if(!moving_Forward(original, original)){
-                cerr << "Error: cannot do the action M at step: " << i+1
-                <<" because robot is at [" <<original.x <<","<<original.y<<"]"
+                cerr << "Error: Robot cannot move 1 square forward at step: " << i+1
+                <<" because it's at [" <<original.x <<","<<original.y<<"]"
                 <<" direction faced: "<< original.direction <<endl;
             }
         }
@@ -383,7 +396,13 @@ void turning_Right(const Point current_point, Point& updated_point){
     }
 }
 
-void test(){
+/*---------------------------------------------------------------------
+ * Method: testAll(void)
+ * Scope:  Global
+ * This function will try to test all the function in this program. It's more
+ * easy to test when break program into smaller parts which can be tested.
+ *---------------------------------------------------------------------*/
+void testAll(){
     Point special_0,special_1,special_2,special_3;
     Point normal_1, normal_2, target, test_point;
     //initial some test points
@@ -402,9 +421,6 @@ void test(){
     normal_1.x = 2;
     normal_1.y = 3;
     normal_1.direction = 'N';
-    normal_2.x = 4;
-    normal_2.y = 5;
-    normal_2.direction = 'E';
     target.x = 3;
     target.y = 4;
     target.direction = 'S';
@@ -470,5 +486,53 @@ void test(){
     assert(list_point.size() == 1);
     while(!list_point.empty()) list_point.pop();
 
-    //
+    // check the input location is the same as the destination
+    assert(check_destination(special_0,special_1) == false);
+    assert(check_destination(target,target) == true);
+    test_point.x = 3;
+    test_point.y = 4;
+    test_point.direction = 'S';
+    assert(check_destination(test_point,target) == true);
+
+    //test add_Possible_Moving function
+    list<string> action_path ;
+    //testing location: [2,3] direction faced: s after 1 action allowed
+    list_point.push(normal_1);
+    add_Possible_Moving(target,list_point,action_path,1);
+    //in this function, i add an optimal function that check every location before
+    //putting in the list. There is one way to get to [3,4] in 1 remaining action allowed, so
+    //this list is emply.
+    assert(list_point.size() == 1);
+    assert(action_path.size() == 0);//it cannot get to the destination
+    while(!list_point.empty()) list_point.pop(); //remove everything from list
+    /*In order to get to [3,4] from [2,3] and we only allow 2 actions,
+    We can only moving forward. Turn left and turn right seems imposible to get there
+    Therefore, list_point has size is 1*/
+    list_point.push(normal_1);
+    add_Possible_Moving(target,list_point,action_path,2);
+    assert(list_point.size() == 3);
+    assert(action_path.size() == 0);//it cannot get to the destination
+    while(!list_point.empty()) list_point.pop(); //remove everything from list
+
+    /*In order to get to [3,4] from [2,3] and we only allow 4 actions,
+    robot maybe move forward, turn left or turn right, so robot will try all of them
+    Therefore, list_point has size is 4. After the first step, it cannot get to the destination
+    location, so action_path is 0*/
+    list_point.push(normal_1);
+    add_Possible_Moving(target,list_point,action_path,4);
+    assert(list_point.size() == 3);
+    assert(action_path.size() == 0);//it cannot get to the destination
+    while(!list_point.empty()) list_point.pop();
+
+    /*In order to get to [3,4] S from [3,4], E and we only allow 1 actions,
+    robot maybe turn left or turn right, but it cannot move forward. Therefore,
+    list_point is 2. Moreover, robot can turn right and get to the destination,
+    so the action_path is 1. action_path contains the direction to get to that target*/
+    normal_2.x = 3;
+    normal_2.y = 4;
+    normal_2.direction = 'E';
+    list_point.push(normal_2);
+    add_Possible_Moving(target,list_point,action_path,1);
+    assert(list_point.size() == 3);
+    assert(action_path.size() == 1);//it cannot get to the destination
 }
